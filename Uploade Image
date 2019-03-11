@@ -1,0 +1,78 @@
+UploadImage.html
+
+@model AngularDemoTest.FileUploadTable
+
+@{
+ViewBag.Title = "UploadImage";
+}
+
+<h2>UploadImage</h2>
+
+@using (Html.BeginForm("UploadImage", "Depts", FormMethod.Post,new { enctype = "multipart/form-data" }))
+{
+  @Html.AntiForgeryToken()
+
+  <div class="form-horizontal">
+  <h4>FileUploadTable</h4>
+  <hr />
+  @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+  <div class="form-group">
+  @Html.LabelFor(model => model.Title, htmlAttributes: new { @class = "control-label col-md-2" })
+  <div class="col-md-10">
+  @Html.EditorFor(model => model.Title, new { htmlAttributes = new { @class = "form-control" } })
+  @Html.ValidationMessageFor(model => model.Title, "", new { @class = "text-danger" })
+  </div>
+  </div>
+
+  <div class="form-group">
+  @Html.LabelFor(model => model.ImagePath, htmlAttributes: new { @class = "control-label col-md-2" })
+  <div class="col-md-10">
+  <input type="file" name="ImageFile" required />
+  </div>
+  </div>
+
+  <div class="form-group">
+  <div class="col-md-offset-2 col-md-10">
+  <input type="submit" value="Create" class="btn btn-default" />
+  </div>
+  </div>
+  </div>
+}
+//Controlller Code
+
+[HttpPost]
+public ActionResult UploadImage(FileUploadTable objFileUploadTable)
+{
+    string fileName = Path.GetFileNameWithoutExtension(objFileUploadTable.ImageFile.FileName);
+    string extension = Path.GetExtension(objFileUploadTable.ImageFile.FileName);
+    fileName = fileName + DateTime.Now.ToString("yymmssfff") + extension;
+    objFileUploadTable.ImagePath = "~/UplodaImages/" + fileName;
+    fileName = Path.Combine(Server.MapPath("~/UplodaImages/" + fileName));
+    objFileUploadTable.ImageFile.SaveAs(fileName);
+
+using (DemoAngularJsTestDbEntities db = new DemoAngularJsTestDbEntities())
+{
+  db.FileUploadTables.Add(objFileUploadTable);
+  db.SaveChanges();
+  }
+  ModelState.Clear();
+  return View();
+}
+
+// Model
+public partial class FileUploadTable
+  {
+    public long DocID { get; set; }
+    public string Title { get; set; }
+    public string ImagePath { get; set; }
+    public HttpPostedFileBase ImageFile { set; get; }
+  }
+
+//database script
+
+CREATE TABLE [dbo].[FileUploadTable](
+	[DocID] [bigint] IDENTITY(1,1) primary key,
+	[Title] [varchar](max) NULL,
+	[ImagePath] [varchar](max) NULL
+  )
+
